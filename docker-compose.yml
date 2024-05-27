@@ -13,6 +13,8 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/stats_db
       - SPRING_DATASOURCE_USERNAME=owner
       - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_INIT_MODE=always
+      - SPRING_DEBUG_MODE=debug
       - DB_HOST=stats-db
       - DB_PORT=5432
 
@@ -44,6 +46,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=password
       - DB_HOST=ewm-db
       - DB_PORT=5432
+      - STATS_SERVER_URL=http://localhost:9090
 
   ewm-db:
     image: postgres:14-alpine
