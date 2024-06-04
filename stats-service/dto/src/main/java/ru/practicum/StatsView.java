@@ -1,16 +1,17 @@
 package ru.practicum;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.validation.constraints.NotBlank;
 
-@Data
-@NoArgsConstructor
+@Getter
+@Setter
 @AllArgsConstructor
-public class RequestOutDTO {
-
+@NoArgsConstructor
+@Builder
+@EqualsAndHashCode
+@ToString
+public class StatsView {
     @NotBlank
     private String app;
 

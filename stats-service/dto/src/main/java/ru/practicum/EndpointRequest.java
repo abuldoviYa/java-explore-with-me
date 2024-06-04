@@ -7,15 +7,15 @@ import org.hibernate.validator.constraints.Length;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class RequestDTO {
-
+@NoArgsConstructor
+@Builder
+@EqualsAndHashCode
+@ToString
+public class EndpointRequest {
     private Long id;
 
     @NotBlank
@@ -32,5 +32,6 @@ public class RequestDTO {
 
     @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime timestamp;
+    private String timestamp;
+
 }

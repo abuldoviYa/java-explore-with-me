@@ -16,31 +16,24 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Request {
+public class Stats {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "app_id")
-    private App app;
+    @Column(name = "app_name", nullable = false)
+    String app;
 
     @NotNull
+    @Column(nullable = false)
     private String uri;
 
-    @NotNull
+    @Column(name = "user_ip", nullable = false, length = 15)
     private String ip;
 
     @NotNull
     @Column(name = "time_stamp")
     private LocalDateTime timestamp;
 
-    public Request(Long id, String uri, String ip, LocalDateTime timestamp, Long appId, String name) {
-        this.id = id;
-        this.uri = uri;
-        this.ip = ip;
-        this.timestamp = timestamp;
-        this.app = new App(appId, name);
-    }
 }
