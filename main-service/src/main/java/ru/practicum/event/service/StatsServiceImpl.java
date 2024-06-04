@@ -99,6 +99,43 @@ public class StatsServiceImpl implements StatsService {
     }
 
     @Override
+    public Map<Long, Long> getViewsUnique(Set<Event> events) {
+        log.info("A request was sent to get statistics of unique visits in the form of Map<eventId, count> " +
+                "for a list of events.");
+
+        Map<Long, Long> views = new HashMap<>();
+
+        Set<Event> publishedEvents = getPublished(events);
+
+        if (events.isEmpty()) {
+            return views;
+        }
+
+        Optional<LocalDateTime> minPublishedOn = publishedEvents.stream()
+                .map(Event::getPublishedOn)
+                .filter(Objects::nonNull)
+                .min(LocalDateTime::compareTo);
+
+        if (minPublishedOn.isPresent()) {
+            LocalDateTime start = minPublishedOn.get();
+            LocalDateTime end = LocalDateTime.now();
+            List<String> uris = publishedEvents.stream()
+                    .map(Event::getId)
+                    .map(id -> ("/events/" + id))
+                    .collect(Collectors.toList());
+
+            List<StatsView> stats = getStats(start, end, uris, true);
+            stats.forEach(stat -> {
+                Long eventId = Long.parseLong(stat.getUri()
+                        .split("/", 0)[2]);
+                views.put(eventId, views.getOrDefault(eventId, 0L) + stat.getHits());
+            });
+        }
+
+        return views;
+    }
+
+    @Override
     public Map<Long, Long> getConfirmedRequests(Set<Event> events) {
         List<Long> eventsId = getPublished(events).stream()
                 .map(Event::getId)

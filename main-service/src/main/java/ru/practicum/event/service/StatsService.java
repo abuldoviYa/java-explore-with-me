@@ -17,4 +17,6 @@ public interface StatsService {
     Map<Long, Long> getViews(Set<Event> events);
 
     Map<Long, Long> getConfirmedRequests(Set<Event> events);
+
+    Map<Long, Long> getViewsUnique(Set<Event> events);
 }

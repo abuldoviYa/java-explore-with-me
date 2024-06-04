@@ -28,15 +28,15 @@ public class EventAdminController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Set<EventDto> getEventsByAdmin(
+    public List<EventDto> getEventsByAdmin(
             @RequestParam(required = false) List<Long> users,
-            @RequestParam(required = false) List<EventStateType> states,
+            @RequestParam(required = false) List<String> states,
             @RequestParam(required = false) List<Long> categories,
             @RequestParam(required = false) @DateTimeFormat(pattern = DT_FORMAT) LocalDateTime rangeStart,
             @RequestParam(required = false) @DateTimeFormat(pattern = DT_FORMAT) LocalDateTime rangeEnd,
             @RequestParam(defaultValue = PAGE_DEFAULT_FROM) @PositiveOrZero Integer from,
             @RequestParam(defaultValue = PAGE_DEFAULT_SIZE) @Positive Integer size) {
-        return eventService.getEventsByAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
+        return eventService.getEventsByAdminParams(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 
     @PatchMapping("/{eventId}")

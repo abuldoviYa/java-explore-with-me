@@ -1,10 +1,15 @@
 package ru.practicum.event.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.StatsView;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.service.CategoryService;
 import ru.practicum.event.dto.*;
@@ -14,8 +19,10 @@ import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.mapper.LocationMapper;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.Location;
+import ru.practicum.event.model.Request;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.event.repository.LocationRepository;
+import ru.practicum.event.repository.RequestRepository;
 import ru.practicum.exception.ForbiddenException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.WrongArgumentException;
@@ -27,11 +34,14 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static ru.practicum.event.enums.RequestStatusType.CONFIRMED;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Slf4j
 public class EventServiceImpl implements EventService {
+    private final RequestRepository requestRepository;
     private final UserService userService;
     private final CategoryService categoryService;
     private final StatsService statsService;
@@ -123,14 +133,14 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Set<EventShortDto> getAllEventsByPrivate(Long userId, Pageable pageable) {
+    public List<EventShortDto> getAllEventsByPrivate(Long userId, Pageable pageable) {
         log.info("Output of all user events with id {} and pagination {}", userId, pageable);
 
         userService.getUserById(userId);
 
-        List<Event> events = eventRepository.findAllByInitiatorId(userId, pageable);
+        List<Event> events = eventRepository.findAllByInitiatorIdOrderByIdAsc(userId, pageable);
 
-        return toEventsShortDto(new HashSet<>(events));
+        return toEventsShortDtoFromList(events);
     }
 
     @Override
@@ -317,8 +327,22 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toSet());
     }
 
+    public List<EventShortDto> toEventsShortDtoFromList(List<Event> events) {
+        log.info("Converting a list of events to an EventShortDto {}", events);
+
+        Map<Long, Long> views = statsService.getViews(new HashSet<>(events));
+        Map<Long, Long> confirmedRequests = statsService.getConfirmedRequests(new HashSet<>(events));
+
+        return events.stream()
+                .map((event) -> eventMapper.toEventShortDto(
+                        event,
+                        confirmedRequests.getOrDefault(event.getId(), 0L),
+                        views.getOrDefault(event.getId(), 0L)))
+                .collect(Collectors.toList());
+    }
+
     private Set<EventDto> toEventsFullDto(Set<Event> events) {
-        Map<Long, Long> views = statsService.getViews(events);
+        Map<Long, Long> views = statsService.getViewsUnique(events);
         Map<Long, Long> confirmedRequests = statsService.getConfirmedRequests(events);
 
         return events.stream()
@@ -370,5 +394,58 @@ public class EventServiceImpl implements EventService {
             throw new WrongArgumentException(String.format("Field: stateAction. Error: The new limit of participants must " +
                     "be no less than the number of applications already approved: %s", eventParticipantLimit));
         }
+    }
+
+    @Transactional(readOnly = true)
+    public List<EventDto> getEventsByAdminParams(List<Long> users, List<String> states, List<Long> categories,
+                                                              LocalDateTime rangeStart, LocalDateTime rangeEnd,
+                                                              Integer from, Integer size) {
+        if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
+            throw new WrongArgumentException("Incorrectly made request.");
+        }
+        Specification<Event> specification = Specification.where(null);
+        if (users != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    root.get("initiator").get("id").in(users));
+        }
+        if (states != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    root.get("state").as(String.class).in(states));
+        }
+        if (categories != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    root.get("category").get("id").in(categories));
+        }
+        if (rangeStart != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"), rangeStart));
+        }
+        if (rangeEnd != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.lessThanOrEqualTo(root.get("eventDate"), rangeEnd));
+        }
+        List<Event> events = eventRepository.findAll(specification, PageRequest.of(from / size, size)).getContent();
+        List<EventDto> result = new ArrayList<>();
+        List<String> uris = events.stream()
+                .map(event -> String.format("/events/%s", event.getId()))
+                .collect(Collectors.toList());
+        LocalDateTime start = events.stream()
+                .map(Event::getCreatedOn)
+                .min(LocalDateTime::compareTo)
+                .orElseThrow(() -> new NotFoundException("Start was not found"));
+        List<StatsView> statsDto = statsService.getStats(start, LocalDateTime.now(), uris, true);
+        List<Long> ids = events.stream().map(Event::getId).collect(Collectors.toList());
+        Map<Long, Long> confirmedRequests = requestRepository.getConfirmedRequests(ids).stream()
+                .collect(Collectors.toMap(RequestStats::getEventId, RequestStats::getConfirmedRequests));
+        for (Event event : events) {
+            if (!statsDto.isEmpty()) {
+                result.add(eventMapper.toEventFullDto(event, statsDto.get(0).getHits(),
+                        confirmedRequests.getOrDefault(event.getId(), 0L)));
+            } else {
+                result.add(eventMapper.toEventFullDto(event, 0L,
+                        confirmedRequests.getOrDefault(event.getId(), 0L)));
+            }
+        }
+        return result;
     }
 }
