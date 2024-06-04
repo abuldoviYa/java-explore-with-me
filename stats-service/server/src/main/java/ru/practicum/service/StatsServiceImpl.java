@@ -9,6 +9,7 @@ import ru.practicum.mapper.StatsMapper;
 import ru.practicum.model.Stats;
 import ru.practicum.repository.RequestRepository;
 
+import javax.validation.ValidationException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -28,6 +29,9 @@ public class StatsServiceImpl implements StatsService {
 
     @Override
     public List<StatsView> getRequestsWithViews(LocalDateTime startDate, LocalDateTime endDate, List<String> uris, Boolean isUnique) {
+        if (endDate.isBefore(startDate)) {
+            throw new ValidationException("Wrong dates");
+        }
         if (isUnique) {
             if (uris == null || uris.isEmpty()) {
                 return requestRepository.findUniqueIpRequestsWithoutUri(startDate, endDate);

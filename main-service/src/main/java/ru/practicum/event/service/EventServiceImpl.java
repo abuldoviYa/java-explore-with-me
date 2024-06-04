@@ -1,12 +1,10 @@
 package ru.practicum.event.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.StatsView;
@@ -19,7 +17,6 @@ import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.mapper.LocationMapper;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.Location;
-import ru.practicum.event.model.Request;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.event.repository.LocationRepository;
 import ru.practicum.event.repository.RequestRepository;
@@ -33,8 +30,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static ru.practicum.event.enums.RequestStatusType.CONFIRMED;
 
 @Service
 @RequiredArgsConstructor
@@ -398,8 +393,8 @@ public class EventServiceImpl implements EventService {
 
     @Transactional(readOnly = true)
     public List<EventDto> getEventsByAdminParams(List<Long> users, List<String> states, List<Long> categories,
-                                                              LocalDateTime rangeStart, LocalDateTime rangeEnd,
-                                                              Integer from, Integer size) {
+                                                 LocalDateTime rangeStart, LocalDateTime rangeEnd,
+                                                 Integer from, Integer size) {
         if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
             throw new WrongArgumentException("Incorrectly made request.");
         }
@@ -442,7 +437,7 @@ public class EventServiceImpl implements EventService {
                 result.add(eventMapper.toEventFullDto(event, statsDto.get(0).getHits(),
                         confirmedRequests.getOrDefault(event.getId(), 0L)));
             } else {
-                result.add(eventMapper.toEventFullDto(event, 0L,
+                result.add(eventMapper.toEventFullDto(event, confirmedRequests.getOrDefault(event.getId(), 0L),
                         confirmedRequests.getOrDefault(event.getId(), 0L)));
             }
         }

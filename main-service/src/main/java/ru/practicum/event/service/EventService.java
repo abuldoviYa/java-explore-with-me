@@ -36,7 +36,8 @@ public interface EventService {
     Set<Event> getEventsByIds(List<Long> eventsId);
 
     Set<EventShortDto> toEventsShortDto(Set<Event> events);
+
     List<EventDto> getEventsByAdminParams(List<Long> users, List<String> states, List<Long> categories,
-                                                 LocalDateTime rangeStart, LocalDateTime rangeEnd,
-                                                 Integer from, Integer size);
+                                          LocalDateTime rangeStart, LocalDateTime rangeEnd,
+                                          Integer from, Integer size);
 }
