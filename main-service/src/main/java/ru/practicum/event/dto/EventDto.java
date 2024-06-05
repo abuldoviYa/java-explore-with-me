@@ -30,7 +30,7 @@ public class EventDto {
     @JsonFormat(pattern = DT_FORMAT, shape = JsonFormat.Shape.STRING)
     private LocalDateTime eventDate;
 
-    Long id;
+    private Long id;
     private UserShortDto initiator;
     private LocationDto location;
     private Boolean paid;

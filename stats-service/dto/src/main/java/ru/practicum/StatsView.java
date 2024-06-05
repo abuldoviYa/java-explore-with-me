@@ -3,6 +3,7 @@ package ru.practicum;
 import lombok.*;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 @Getter
 @Setter
@@ -13,9 +14,11 @@ import javax.validation.constraints.NotBlank;
 @ToString
 public class StatsView {
     @NotBlank
+    @Size(min = 3, max = 25)
     private String app;
 
     @NotBlank
+    @Size(min = 3, max = 25)
     private String uri;
 
     @NotBlank

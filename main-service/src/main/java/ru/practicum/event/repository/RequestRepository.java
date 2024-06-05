@@ -2,6 +2,7 @@ package ru.practicum.event.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 import ru.practicum.event.dto.RequestStats;
 import ru.practicum.event.enums.RequestStatusType;
 import ru.practicum.event.model.Request;
@@ -9,6 +10,7 @@ import ru.practicum.event.model.Request;
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public interface RequestRepository extends JpaRepository<Request, Long> {
     List<Request> findAllByRequesterId(Long requesterId);
 
