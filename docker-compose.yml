@@ -46,7 +46,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=password
       - DB_HOST=ewm-db
       - DB_PORT=5432
-      - STATS_SERVER_URL=http://localhost:9090
+      - STATS_SERVER_URL=http://stats-server:9090
 
   ewm-db:
     image: postgres:14-alpine

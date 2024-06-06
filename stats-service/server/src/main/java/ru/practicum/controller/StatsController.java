@@ -3,8 +3,8 @@ package ru.practicum.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.RequestDTO;
-import ru.practicum.RequestOutDTO;
+import ru.practicum.EndpointRequest;
+import ru.practicum.StatsView;
 import ru.practicum.service.StatsService;
 
 import javax.validation.Valid;
@@ -22,16 +22,16 @@ public class StatsController {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @PostMapping("/hit")
-    public ResponseEntity<Void> addRequest(@Valid @RequestBody RequestDTO requestDto) {
+    public ResponseEntity<Void> addRequest(@Valid @RequestBody EndpointRequest requestDto) {
         statsService.addRequest(requestDto);
         return ResponseEntity.status(201).build();
     }
 
     @GetMapping("/stats")
-    public ResponseEntity<List<RequestOutDTO>> getStats(@RequestParam String start,
-                                                        @RequestParam String end,
-                                                        @RequestParam(required = false) List<String> uris,
-                                                        @RequestParam(defaultValue = "false") Boolean unique) {
+    public ResponseEntity<List<StatsView>> getStats(@RequestParam String start,
+                                                    @RequestParam String end,
+                                                    @RequestParam(required = false) List<String> uris,
+                                                    @RequestParam(defaultValue = "false") Boolean unique) {
 
         LocalDateTime startDate;
         LocalDateTime endDate;
@@ -42,7 +42,7 @@ public class StatsController {
             return ResponseEntity.badRequest().build();
         }
 
-        List<RequestOutDTO> results = statsService.getRequestsWithViews(startDate, endDate, uris, unique);
+        List<StatsView> results = statsService.getRequestsWithViews(startDate, endDate, uris, unique);
         return ResponseEntity.ok().body(results);
     }
 }

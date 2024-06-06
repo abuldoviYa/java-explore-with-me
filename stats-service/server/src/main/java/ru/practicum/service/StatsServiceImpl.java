@@ -2,38 +2,38 @@ package ru.practicum.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.RequestDTO;
-import ru.practicum.RequestOutDTO;
-import ru.practicum.mapper.RequestMapper;
-import ru.practicum.model.App;
-import ru.practicum.model.Request;
-import ru.practicum.repository.AppRepository;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.EndpointRequest;
+import ru.practicum.StatsConstants;
+import ru.practicum.StatsView;
+import ru.practicum.mapper.StatsMapper;
+import ru.practicum.model.Stats;
 import ru.practicum.repository.RequestRepository;
 
+import javax.validation.ValidationException;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class StatsServiceImpl implements StatsService {
 
-    private final AppRepository appRepository;
     private final RequestRepository requestRepository;
-    private final RequestMapper requestMapper;
+    private final StatsMapper statsMapper;
 
     @Override
-    public void addRequest(RequestDTO requestDto) {
-        Optional<App> oApp = appRepository.findByName(requestDto.getApp());
-        App app = oApp.orElseGet(() -> appRepository.save(new App(requestDto.getApp())));
+    public void addRequest(EndpointRequest endpointRequest) {
 
-        Request request = requestMapper.toRequest(requestDto);
-        request.setApp(app);
+        Stats request = statsMapper.toStats(endpointRequest, LocalDateTime.parse(endpointRequest.getTimestamp(), StatsConstants.DT_FORMATTER));
         requestRepository.save(request);
     }
 
     @Override
-    public List<RequestOutDTO> getRequestsWithViews(LocalDateTime startDate, LocalDateTime endDate, List<String> uris, Boolean isUnique) {
+    @Transactional(readOnly = true)
+    public List<StatsView> getRequestsWithViews(LocalDateTime startDate, LocalDateTime endDate, List<String> uris, Boolean isUnique) {
+        if (endDate.isBefore(startDate)) {
+            throw new ValidationException("Wrong dates");
+        }
         if (isUnique) {
             if (uris == null || uris.isEmpty()) {
                 return requestRepository.findUniqueIpRequestsWithoutUri(startDate, endDate);
