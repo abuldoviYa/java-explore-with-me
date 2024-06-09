@@ -15,6 +15,9 @@ public interface CommentMapper {
     @Mapping(target = "event", expression = "java(event)")
     Comment toComment(CommentDto newCompilationDto, User user, Event event);
 
+
+    @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "eventId", source = "event.id")
     CommentDto toCommentDto(Comment compilation);
 }
 

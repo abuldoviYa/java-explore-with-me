@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface CommentRepository extends JpaRepository<Comment, Integer> {
     List<Comment> getByEventIdOrderByCreatedDesc(Long id, Pageable pageable);
 
-    List<Comment> getUserCommentOrderByUserId(Long userId);
+    List<Comment> getCommentByUserId(Long userId);
 
     Optional<Comment> findById(Long id);
 

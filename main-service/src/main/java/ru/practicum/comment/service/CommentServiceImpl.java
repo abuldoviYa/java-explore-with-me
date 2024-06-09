@@ -14,11 +14,13 @@ import ru.practicum.comment.model.Comment;
 import ru.practicum.comment.repository.CommentRepository;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.service.EventService;
+import ru.practicum.exception.ForbiddenException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.WrongArgumentException;
 import ru.practicum.user.model.User;
 import ru.practicum.user.service.UserService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,6 +54,7 @@ public class CommentServiceImpl implements CommentService {
         User user = userService.getUserById(userId);
         Event event = eventService.getEventById(eventId);
         Comment comment = commentMapper.toComment(commentDto, user, event);
+        comment.setCreated(LocalDateTime.now());
         log.debug("Comment with id = {}, created", comment.getId());
         return commentMapper.toCommentDto(commentRepository.save(comment));
     }
@@ -73,7 +76,10 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public void deleteCommentById(Long userId, Long commentId) {
         log.debug("Delete comment with id= {}, SERVICE", commentId);
-        List<Comment> commentList = commentRepository.getUserCommentOrderByUserId(userId);
+        List<Comment> commentList = commentRepository.getCommentByUserId(userId);
+        if (commentList.isEmpty()) {
+            throw new ForbiddenException("Comments not found");
+        }
         for (Comment comment : commentList) {
             if (!comment.getId().equals(commentId)) {
                 throw new WrongArgumentException("comment must belong to the user");
