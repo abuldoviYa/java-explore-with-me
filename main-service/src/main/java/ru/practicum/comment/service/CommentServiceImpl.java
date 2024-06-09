@@ -3,7 +3,6 @@ package ru.practicum.comment.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -30,17 +29,13 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class CommentServiceImpl implements CommentService {
 
-    @Autowired
-    CommentRepository commentRepository;
+    private final CommentRepository commentRepository;
 
-    @Autowired
-    CommentMapper commentMapper;
+    private final CommentMapper commentMapper;
 
-    @Autowired
-    UserService userService;
+    private final UserService userService;
 
-    @Autowired
-    EventService eventService;
+    private final EventService eventService;
 
     @Transactional
     public void adminDelete(Integer comId) {
